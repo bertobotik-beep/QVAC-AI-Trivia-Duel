@@ -1,0 +1,19 @@
+{
+  "name": "qvac-ai-trivia-duel",
+  "version": "1.0.0",
+  "description": "Pick a category, answer AI-generated trivia questions, and track your score across rounds.",
+  "type": "module",
+  "main": "src/gui.js",
+  "scripts": {
+    "start": "node src/gui.js",
+    "gui": "node src/gui.js"
+  },
+  "keywords": ["qvac", "on-device-ai", "llm", "offline-ai"],
+  "license": "MIT",
+  "dependencies": {
+    "@qvac/sdk": "^0.19.0"
+  },
+  "engines": {
+    "node": ">=22.17"
+  }
+}
