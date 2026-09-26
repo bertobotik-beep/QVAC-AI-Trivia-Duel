@@ -78,15 +78,26 @@ export async function generate(modelId, body) {
 
     const verdictMatch = raw.match(/verdict\s*:?\s*(correct|incorrect)/i);
     const noteMatch = raw.match(/note\s*:?\s*(.+)/i);
+    // Deterministic override: if the player's answer literally contains the correct
+    // answer (or vice versa), trust that over the model's own judgment — the small
+    // model sometimes contradicts an obviously matching answer.
+    const normalize = (s) => s.trim().toLowerCase().replace(/^(the|a|an)\s+/, "");
+    const literalMatch = normalize(userAnswer).includes(normalize(correctAnswer)) ||
+      normalize(correctAnswer).includes(normalize(userAnswer));
     let isCorrect;
-    if (verdictMatch) {
+    if (literalMatch) {
+      isCorrect = true;
+    } else if (verdictMatch) {
       isCorrect = /^correct/i.test(verdictMatch[1]);
     } else {
-      // fallback: simple string containment check
-      isCorrect = userAnswer.trim().toLowerCase().includes(correctAnswer.trim().toLowerCase()) ||
-        correctAnswer.trim().toLowerCase().includes(userAnswer.trim().toLowerCase());
+      isCorrect = false;
     }
-    const note = noteMatch ? noteMatch[1].replace(/["*]/g, "").trim() : (isCorrect ? "Nice, that matches!" : `Not quite — the correct answer was ${correctAnswer}.`);
+    const modelSaidIncorrect = verdictMatch && !/^correct/i.test(verdictMatch[1]);
+    const note = literalMatch && modelSaidIncorrect
+      ? `Yes, that matches the correct answer (${correctAnswer})!`
+      : noteMatch
+        ? noteMatch[1].replace(/["*]/g, "").trim()
+        : (isCorrect ? "Nice, that matches!" : `Not quite — the correct answer was ${correctAnswer}.`);
 
     return { isCorrect, note };
   }
